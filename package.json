@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "cam-smoke": "vite-node scripts/make-cam-smoke.ts",
-    "build:hershey": "vite-node scripts/build-hershey.ts"
+    "build:hershey": "vite-node scripts/build-hershey.ts",
+    "deploy": "bash scripts/deploy.sh"
   },
   "dependencies": {
     "idb": "^8.0.3",

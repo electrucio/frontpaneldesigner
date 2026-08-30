@@ -10,13 +10,29 @@ como **SVG listo para CAM**, pensada para grabado con fresa en V.
 - La herramienta forma parte del modelo: el perfil real de la V-bit gobierna el ancho de trazo del
   preview, la profundidad de cada objeto y (más adelante) las comprobaciones de fabricabilidad.
 
+Publicado en **https://electrucio.github.io/front-panel-designer/**
+
 ```bash
 npm install
 npm run dev        # editor en http://localhost:5173
 npm test           # núcleo geométrico
 npm run build      # build de producción
 npm run cam-smoke  # regenera los ficheros de la prueba de humo de CAM
+npm run deploy     # publica en electrucio.github.io
 ```
+
+## Despliegue
+
+`npm run deploy` construye y copia el resultado en una carpeta del repositorio
+`electrucio/electrucio.github.io`, que es el sitio de ficheros estáticos donde ya
+vive `ltspice-kicad-mapper`. Solo se toca esa carpeta.
+
+**La carpeta no puede llamarse igual que el repositorio.** GitHub reserva
+`<usuario>.github.io/<nombre-de-repo>/` para la página de proyecto de ese
+repositorio, y esa ruta tapa a la carpeta del sitio de usuario aunque el
+repositorio no tenga Pages activado: la primera versión publicó en
+`frontpaneldesigner/` y devolvía 404 mientras la misma construcción, copiada con
+otro nombre, daba 200. De ahí `front-panel-designer`.
 
 ## Estado
 

@@ -4,9 +4,14 @@ import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'node:url'
 
 /**
- * `base` apunta a la subruta de GitHub Pages en producción y a la raíz en
- * desarrollo. La raíz de electrucio.github.io ya la ocupa otro sitio, así que
- * esto se publica como página de proyecto.
+ * `base` apunta a la subruta del sitio estático en producción y a la raíz en
+ * desarrollo.
+ *
+ * La carpeta NO puede llamarse igual que el repositorio: GitHub reserva
+ * `<usuario>.github.io/<nombre-de-repo>/` para la página de proyecto de ese
+ * repositorio, y esa ruta tapa a la carpeta del sitio de usuario aunque el
+ * repositorio no tenga Pages activado. Con `frontpaneldesigner/` el sitio
+ * devolvía 404 mientras la misma construcción servida con otro nombre daba 200.
  *
  * Se discrimina por `mode` y no por `command`: `vite preview` es un `serve`,
  * pero sirve la construcción de producción. Usando `command` el preview
@@ -15,7 +20,7 @@ import { fileURLToPath, URL } from 'node:url'
  *
  * `BASE_PATH` permite desplegarlo en otro sitio sin tocar el fichero.
  */
-const PROD_BASE = process.env.BASE_PATH ?? '/frontpaneldesigner/'
+const PROD_BASE = process.env.BASE_PATH ?? '/front-panel-designer/'
 
 export default defineConfig(({ mode }) => ({
   base: mode === 'production' ? PROD_BASE : '/',
