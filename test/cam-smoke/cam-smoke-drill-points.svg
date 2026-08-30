@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  Front Panel Designer - CAM smoke test
+  Unidades: 1 unidad de usuario = 1 mm. Panel 100 x 60 mm.
+  Origen: arriba-izquierda, Y hacia abajo.
+  V-bit: 30 grados TOTALES incluidos, punta 0.2 mm (sin calibrar)
+  Profundidad por defecto 0.3 mm; maxima 0.8 mm.
+  IMPORTANTE: en engrave-lines el stroke-width es solo indicativo; el ancho real
+  del surco lo determina la profundidad de corte que se programe en la CAM.
+  Taladros: puntos centrales.
+  Las coordenadas de cut y drill son la LINEA NOMINAL, no el borde acabado:
+  la CAM debe aplicar el offset del radio de herramienta.
+  Capas:
+    panel-outline (#0000ff): contorno exterior del panel (linea nominal)
+    engrave-fill (#ff00ff): regiones cerradas sin solapes, para V-carving
+    engrave-lines (#000000): trazos abiertos a seguir con la V-bit a profundidad constante
+    cut (#ff0000): contornos pasantes (linea nominal; aplicar offset de herramienta)
+    drill (#00a000): taladros (linea nominal)
+-->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     width="100mm" height="60mm"
+     viewBox="0 0 100 60" version="1.1">
+  <g id="panel-outline" inkscape:groupmode="layer" inkscape:label="Panel outline" fill="none" stroke="#0000ff">
+    <path d="M 0 0 L 100 0 L 100 60 L 0 60 Z" fill="none" stroke="#0000ff" stroke-width="0.1"/>
+  </g>
+  <g id="engrave-lines" inkscape:groupmode="layer" inkscape:label="Engrave lines" fill="none" stroke="#000000">
+    <path d="M 20 20 L 30 20" fill="none" stroke="#000000" stroke-width="0.3608"/>
+    <circle cx="50" cy="35" r="10" fill="none" stroke="#000000" stroke-width="0.3608"/>
+  </g>
+  <g id="drill" inkscape:groupmode="layer" inkscape:label="Drill" fill="none" stroke="#00a000">
+    <circle cx="80" cy="20" r="0.001" fill="none" stroke="#00a000" stroke-width="0.1"/>
+  </g>
+</svg>
