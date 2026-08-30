@@ -1,6 +1,9 @@
 import { create } from 'zustand'
 import type { Doc, Obj, PanelSpec, ToolProfile } from '../core/types'
-import { createDefaultDoc, mapObject, removeObject as removeObj } from '../core/doc'
+import {
+  createDefaultDoc, duplicateObject as duplicateObj, mapObject,
+  removeObject as removeObj,
+} from '../core/doc'
 import {
   canRedo, canUndo, commit, endTransaction, initHistory,
   redo as redoHistory, undo as undoHistory, type History,
@@ -22,6 +25,7 @@ interface AppState {
   patchTool: (patch: Partial<ToolProfile>, txKey?: string | null) => void
 
   addObject: (obj: Obj) => void
+  duplicateObject: (id: string) => void
   patchObject: (id: string, patch: Partial<Obj>, txKey?: string | null) => void
   deleteObject: (id: string) => void
 
@@ -69,6 +73,20 @@ export const useStore = create<AppState>((set, get) => ({
   addObject(obj) {
     get().update((doc) => ({ ...doc, objects: [...doc.objects, obj] }))
     set({ selection: [obj.id] })
+  },
+
+  /**
+   * Duplica un objeto y selecciona la copia: lo normal después de copiar es
+   * cambiarle un par de parámetros, no volver a buscarla en la lista.
+   */
+  duplicateObject(id) {
+    let created: string | null = null
+    get().update((doc) => {
+      const { objects, newId } = duplicateObj(doc.objects, id)
+      created = newId
+      return newId === null ? doc : { ...doc, objects }
+    })
+    if (created) set({ selection: [created] })
   },
 
   patchObject(id, patch, txKey = null) {

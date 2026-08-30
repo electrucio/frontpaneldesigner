@@ -11,6 +11,8 @@ export function App() {
   const replaceDoc = useStore((s) => s.replaceDoc)
   const undo = useStore((s) => s.undo)
   const redo = useStore((s) => s.redo)
+  const duplicate = useStore((s) => s.duplicateObject)
+  const selection = useStore((s) => s.selection)
 
   // Recupera el autoguardado. Si no hay ninguno, se queda el documento vacío.
   useEffect(() => {
@@ -22,14 +24,22 @@ export function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey
-      if (!mod || e.key.toLowerCase() !== 'z') return
-      e.preventDefault()
-      if (e.shiftKey) redo()
-      else undo()
+      if (!mod) return
+
+      const key = e.key.toLowerCase()
+      if (key === 'z') {
+        e.preventDefault()
+        if (e.shiftKey) redo()
+        else undo()
+      } else if (key === 'd' && selection.length === 1) {
+        // El atajo del navegador es «añadir a marcadores»; aquí estorba.
+        e.preventDefault()
+        duplicate(selection[0])
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [undo, redo])
+  }, [undo, redo, duplicate, selection])
 
   return (
     <div className="app">

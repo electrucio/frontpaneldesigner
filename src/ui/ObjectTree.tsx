@@ -28,6 +28,7 @@ export function ObjectTree() {
   const select = useStore((s) => s.select)
   const addObject = useStore((s) => s.addObject)
   const deleteObject = useStore((s) => s.deleteObject)
+  const duplicate = useStore((s) => s.duplicateObject)
   const patchObject = useStore((s) => s.patchObject)
   const update = useStore((s) => s.update)
   const [logoError, setLogoError] = useState<string | null>(null)
@@ -123,6 +124,8 @@ export function ObjectTree() {
                 onClick={(e) => { e.stopPropagation(); move(obj.id, -1) }}>↑</button>
               <button type="button" title="Bajar" disabled={i === doc.objects.length - 1}
                 onClick={(e) => { e.stopPropagation(); move(obj.id, 1) }}>↓</button>
+              <button type="button" title="Duplicar (⌘D)"
+                onClick={(e) => { e.stopPropagation(); duplicate(obj.id) }}>⧉</button>
               <button type="button" title="Eliminar"
                 onClick={(e) => { e.stopPropagation(); deleteObject(obj.id) }}>✕</button>
             </span>

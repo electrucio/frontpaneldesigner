@@ -216,6 +216,87 @@ export function mapObject(objects: Obj[], id: string, fn: (obj: Obj) => Obj): Ob
   })
 }
 
+/**
+ * Copia profunda con identificadores nuevos, también en los hijos de un grupo.
+ *
+ * El documento es JSON serializable por diseño, así que la ida y vuelta por
+ * JSON es una copia profunda correcta y sin sorpresas.
+ */
+export function cloneObject(obj: Obj): Obj {
+  const copy = JSON.parse(JSON.stringify(obj)) as Obj
+  return reassignIds(copy)
+}
+
+function reassignIds(obj: Obj): Obj {
+  obj.id = newId(obj.type[0])
+  if (obj.type === 'group') obj.children = obj.children.map(reassignIds)
+  return obj
+}
+
+/**
+ * Siguiente nombre de la serie: incrementa el número final si lo hay, y si no
+ * lo añade. Así «GAIN» pasa a «GAIN 2» y «Reverb 12» a «Reverb 13».
+ */
+export function nextName(name: string): string {
+  const trimmed = name.trim()
+  if (trimmed === '') return ''
+  const match = /^(.*?)(\d+)$/.exec(trimmed)
+  return match ? `${match[1]}${Number(match[2]) + 1}` : `${trimmed} 2`
+}
+
+/**
+ * Primer nombre de la serie que no esté ya en uso.
+ *
+ * Sin esto, duplicar «GAIN» teniendo ya un «GAIN 2» crea un segundo «GAIN 2» y
+ * el árbol acaba con filas indistinguibles.
+ */
+export function uniqueName(name: string, used: Set<string>): string {
+  let candidate = nextName(name)
+  // Un nombre vacío no numera, así que no hay serie por la que avanzar.
+  while (candidate !== '' && used.has(candidate)) candidate = nextName(candidate)
+  return candidate
+}
+
+/** Desplazamiento por defecto de una copia, para que no tape al original. */
+export const DUPLICATE_OFFSET_MM = { x: 5, y: 0 }
+
+export interface DuplicateResult {
+  objects: Obj[]
+  /** `null` si no se encontró el objeto. */
+  newId: string | null
+}
+
+/**
+ * Inserta una copia justo detrás del original, dentro de su mismo grupo, para
+ * que quede al lado en el árbol y no al final de la lista.
+ */
+export function duplicateObject(
+  objects: Obj[], id: string, offset = DUPLICATE_OFFSET_MM,
+): DuplicateResult {
+  let newId: string | null = null
+  const used = new Set<string>()
+  for (const obj of walk(objects)) used.add(obj.name)
+
+  const visit = (list: Obj[]): Obj[] => {
+    const out: Obj[] = []
+    for (const obj of list) {
+      if (obj.id === id) {
+        const copy = cloneObject(obj)
+        copy.name = uniqueName(obj.name, used)
+        copy.x = obj.x + offset.x
+        copy.y = obj.y + offset.y
+        newId = copy.id
+        out.push(obj, copy)
+        continue
+      }
+      out.push(obj.type === 'group' ? { ...obj, children: visit(obj.children) } : obj)
+    }
+    return out
+  }
+
+  return { objects: visit(objects), newId }
+}
+
 export function removeObject(objects: Obj[], id: string): Obj[] {
   return objects
     .filter((obj) => obj.id !== id)
