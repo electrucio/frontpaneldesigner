@@ -267,11 +267,14 @@ export interface LogoObj extends ObjBase {
   keepAspect: boolean
   heightMm: Mm
   /**
-   * Decisión tomada en la importación para logos de trazo, nunca implícita:
-   * `outline` convierte el trazo en contorno relleno; `centerline` lo manda a
-   * engrave-lines y el grosor lo da la profundidad.
+   * Cómo se graba, decidido explícitamente y nunca en silencio.
+   *
+   * `as-authored` respeta el relleno que traía cada forma del fichero.
+   * `all-filled` vacía todo en V y `all-centerline` sigue todos los contornos
+   * con la punta; ambos existen porque un SVG con hojas de estilo puede
+   * declarar el relleno de forma que no sepamos leer.
    */
-  strokeHandling: 'outline' | 'centerline' | 'not-applicable'
+  renderMode: 'as-authored' | 'all-filled' | 'all-centerline'
 }
 
 export interface GroupObj extends ObjBase {

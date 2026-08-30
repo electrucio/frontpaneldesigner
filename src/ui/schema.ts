@@ -301,6 +301,26 @@ export const TYPE_SECTIONS: Partial<Record<ObjType, Section[]>> = {
     ],
   }],
   scale: SCALE_SECTIONS,
+  logo: [{
+    title: 'Logotipo',
+    fields: [
+      { kind: 'number', key: 'widthMm', label: 'Ancho', unit: 'mm', min: 0.5, step: 1 },
+      {
+        kind: 'boolean', key: 'keepAspect', label: 'Mantener proporción',
+        help: 'El ancho y el alto se miden sobre el dibujo, no sobre el lienzo del fichero.',
+      },
+      { kind: 'number', key: 'heightMm', label: 'Alto', unit: 'mm', min: 0.5, step: 1 },
+      {
+        kind: 'select', key: 'renderMode', label: 'Cómo se graba',
+        options: [
+          { value: 'as-authored', label: 'Según el fichero' },
+          { value: 'all-filled', label: 'Todo relleno (V-carve)' },
+          { value: 'all-centerline', label: 'Todo trazo (línea única)' },
+        ],
+        help: 'Si el SVG trae hojas de estilo, el relleno puede leerse mal; aquí se fuerza.',
+      },
+    ],
+  }],
   group: [],
 }
 
@@ -361,6 +381,9 @@ export function isFieldRelevant(type: ObjType, key: string, obj: Record<string, 
       }
     }
   }
+
+  // El alto lo calcula la proporción salvo que se desactive.
+  if (type === 'logo' && key === 'heightMm') return obj.keepAspect === false
 
   if (key === 'depthMm') return obj.layer === 'engrave'
   return true

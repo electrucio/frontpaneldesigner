@@ -3,7 +3,7 @@ import {
   DOC_VERSION,
   type Anchor, type ArcObj, type CircleObj, type Doc, type HoleObj,
   type LayerId, type LineObj, type Obj, type ObjType, type PanelSpec,
-  type RectObj, type ScaleObj, type TextObj, type ToolProfile,
+  type LogoObj, type RectObj, type ScaleObj, type TextObj, type ToolProfile,
 } from './types'
 
 let idCounter = 0
@@ -88,6 +88,31 @@ export function createScale(x = 30, y = 30): ScaleObj {
     name: 'Escala',
     x, y,
     ...DEFAULT_SCALE_PRESET.settings,
+  }
+}
+
+/**
+ * Crea el objeto a partir de lo que devuelve el importador. El ancho por
+ * defecto es prudente: un logotipo de panel rara vez pasa de 40 mm.
+ */
+export function createLogo(
+  imported: { paths: { d: string; filled: boolean }[]; width: number; height: number },
+  name: string,
+  x = 30, y = 20,
+): LogoObj {
+  const widthMm = Math.min(40, Math.max(5, imported.width))
+  return {
+    ...base('logo', 'engrave'),
+    type: 'logo',
+    name,
+    x, y,
+    paths: imported.paths,
+    sourceW: imported.width,
+    sourceH: imported.height,
+    widthMm,
+    keepAspect: true,
+    heightMm: (widthMm * imported.height) / imported.width,
+    renderMode: 'as-authored',
   }
 }
 

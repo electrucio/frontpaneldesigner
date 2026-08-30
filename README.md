@@ -26,8 +26,8 @@ npm run cam-smoke  # regenera los ficheros de la prueba de humo de CAM
 | M1 | Polilínea, rectángulo, círculo, arco, agujero, grupos, inspector por esquema | hecho |
 | M2 | Texto Hershey de línea única, avisos, asistente de calibración de la fresa | hecho |
 | M2.5 / M3 | Escala circular completa con cinco presets | hecho |
+| M4 | Importación de logotipo SVG | hecho |
 | M2b | Texto de contornos (opentype.js) para rótulos grandes | pendiente |
-| M4 | Importación de logotipo SVG | pendiente |
 | M5 | DRC completo, plantillas de estación de mando, biblioteca | pendiente |
 
 ## CAM: usa EasyShape5000
@@ -106,6 +106,23 @@ src/state/     historial con coalescencia, autoguardado en IndexedDB
 src/ui/        lienzo, árbol de objetos, inspector generado por esquema
 src/assets/fonts/hershey.json   generado por `npm run build:hershey`
 ```
+
+## Logotipos
+
+El botón **+ Logotipo…** importa un SVG. Se guarda **normalizado dentro del proyecto** —caminos
+absolutos, sin transformaciones y con el origen en su propia esquina—, así que el `.json` es
+autocontenido y no depende de que el fichero original siga existiendo.
+
+El tamaño se mide sobre **el dibujo, no sobre el `viewBox`**: pedir 30 mm de ancho da 30 mm de tinta,
+no un lienzo con márgenes arbitrarios. Las formas rellenas van a `engrave-fill` para vaciarse en V y
+las de solo trazo a `engrave-lines` para seguirse con la punta; el desplegable «Cómo se graba»
+permite forzar una u otra cosa para el logotipo entero.
+
+Se **rechaza** el fichero que traiga `<clipPath>`, `<mask>`, `<use>` o `<text>`, porque ignorarlos
+daría una pieza distinta de la que se ve en pantalla; el mensaje dice qué hacer en Inkscape. En
+cambio las hojas de estilo **solo avisan**: rechazarlas dejaría fuera casi todo lo que exporta
+Illustrator, y no cambian la geometría — como mucho hacen que el relleno se lea mal, y para eso está
+el desplegable.
 
 ## Texto
 

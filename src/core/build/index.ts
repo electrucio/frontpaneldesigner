@@ -8,6 +8,7 @@ import { buildPanelOutline } from './panel'
 import { buildArc, buildCircle, buildHole, buildLine, buildRect } from './shapes'
 import { buildText } from './text'
 import { buildScale } from './scale'
+import { buildLogo } from './logo'
 
 export { anchorPoint, ANCHORS } from './anchor'
 export { PANEL_OBJECT_ID, buildPanelOutline } from './panel'
@@ -46,8 +47,7 @@ function buildObject(obj: Obj, parent: Mat, topLevel: boolean, env: BuildEnv): P
       return obj.children.flatMap((child) => buildObject(child, m, false, env))
     case 'text': return buildText(obj, m, env)
     case 'scale': return buildScale(obj, m, env)
-    // Pendiente: logo (M4).
-    case 'logo': return []
+    case 'logo': return buildLogo(obj, m, env)
     default: return assertNever(obj)
   }
 }
