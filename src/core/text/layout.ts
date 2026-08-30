@@ -2,7 +2,8 @@ import type { Mm, TextHAlign, TextVAlign } from '../types'
 import type { Vec2 } from '../geometry/vec'
 import { apply, multiply, rotation, translation } from '../geometry/mat'
 import { polar } from '../geometry/polar'
-import { getGlyph, getHersheyFont, type HersheyFont } from './hershey'
+import { getHersheyFont, type HersheyFont } from './hershey'
+import { getGlyph } from './glyphs'
 
 /**
  * Maquetación de texto de línea única.

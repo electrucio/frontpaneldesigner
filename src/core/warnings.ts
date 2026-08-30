@@ -38,8 +38,9 @@ export function warningsForObject(doc: Doc, obj: Obj): Warning[] {
       if (missing.length > 0) {
         // Es justo lo que hace falta en un panel: 50Ω, 20°, µF.
         warn('error',
-          `Esta fuente no tiene ${missing.map((c) => `«${c}»`).join(', ')}: ` +
-          'esos caracteres no se grabarán. Las Hershey solo cubren ASCII.')
+          `No se puede componer ${missing.map((c) => `«${c}»`).join(', ')}: ` +
+          'esos caracteres no se grabarán. Las Hershey cubren ASCII, y sobre eso se ' +
+          'añaden griego, símbolos técnicos y letras acentuadas.')
       }
     }
 

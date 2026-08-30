@@ -35,7 +35,12 @@ export interface HersheyFont {
   glyphs: HersheyGlyphData[]
 }
 
-const FONTS = (data as { fonts: Record<string, HersheyFont> }).fonts
+const DATA = data as {
+  fonts: Record<string, HersheyFont>
+  fallbackFonts: Record<string, HersheyFont>
+}
+
+const FONTS = DATA.fonts
 
 export const listHersheyFonts = (): { id: string; label: string }[] =>
   Object.values(FONTS).map((f) => ({ id: f.id, label: f.label }))
@@ -43,6 +48,13 @@ export const listHersheyFonts = (): { id: string; label: string }[] =>
 export const getHersheyFont = (id: string): HersheyFont | null => FONTS[id] ?? null
 
 export const isHersheyFont = (id: string): boolean => id in FONTS
+
+/**
+ * Familias de reserva, no ofrecidas al usuario: aportan los caracteres que las
+ * latinas no tienen. Ver `symbols.ts`.
+ */
+export const getFallbackFont = (id: string): HersheyFont | null =>
+  DATA.fallbackFonts[id] ?? null
 
 /**
  * Avance del glifo en unidades Hershey.
@@ -59,8 +71,6 @@ export interface Glyph {
   strokes: Vec2[][]
   advance: number
 }
-
-const cache = new Map<string, Glyph | null>()
 
 /**
  * Interpreta el `d` de un glifo Hershey. Solo aparecen `M` y `L`, con
@@ -87,18 +97,11 @@ export function parseGlyphPath(d: string): Vec2[][] {
   return strokes.filter((s) => s.length > 0)
 }
 
-/** Glifo de un carácter, o `null` si la familia no lo tiene. */
-export function getGlyph(font: HersheyFont, char: string): Glyph | null {
-  const key = `${font.id}:${char}`
-  const hit = cache.get(key)
-  if (hit !== undefined) return hit
-
-  const glyph = buildGlyph(font, char)
-  cache.set(key, glyph)
-  return glyph
-}
-
-function buildGlyph(font: HersheyFont, char: string): Glyph | null {
+/**
+ * Glifo tal cual está en la familia, sin reservas ni composición.
+ * Para la resolución completa, usar `getGlyph` de `glyphs.ts`.
+ */
+export function getBaseGlyph(font: HersheyFont, char: string): Glyph | null {
   if (char === ' ') return { strokes: [], advance: font.metrics.spaceAdvance }
 
   const index = char.charCodeAt(0) - font.firstCharCode

@@ -131,9 +131,20 @@ saldría con doble trazo y se cerraría sola. El tamaño se pide como **altura d
 milímetros**, que es lo que se mide con el calibre, y la conversión usa la altura real de cada familia
 medida en `scripts/build-hershey.ts`, de modo que 3 mm son 3 mm en las seis.
 
-Dos avisos que la interfaz da y conviene conocer: Hershey solo cubre **ASCII imprimible**, así que
-«Ω», «µ», «°» o «ñ» no existen y se señalan en vez de perderse en silencio; y un surco demasiado
-grueso para el tamaño de letra emborrona el resultado.
+Las Hershey originales solo cubren **ASCII imprimible**, y el vocabulario de un panel se sale de ahí
+enseguida. Sobre esa base se añaden, siempre en línea única:
+
+- **Letras griegas** tomadas de la familia `greek`, que Hershey mapea sobre posiciones ASCII por
+  transliteración fonética. Cuidado con xi y chi, que van por la transcripción inglesa: **chi es la
+  C** y **xi es la X**, al revés de lo que sugiere el parecido de las formas. Hay un test que fija esa
+  identidad, escrito después de meter la pata.
+- **Símbolos técnicos**: `°` sintetizado como circulito, y `Ø`, `±`, `×`, `÷` compuestos a partir de
+  glifos de la propia familia para que hereden su estilo.
+- **Letras acentuadas y signos de apertura**: el glifo base más el trazo del acento, centrado sobre su
+  caja. Así salen «BAÑO», «ÁÉÍÓÚ», «ü», «ç» y «¿¡».
+
+Lo que sigue sin poderse componer se señala en el inspector en vez de perderse en silencio. Y también
+se avisa cuando el surco es demasiado grueso para el tamaño de letra.
 
 Los tests hacen snapshot de `Primitive[]`, no de la cadena SVG: el string es frágil a cambios de
 formato y daría rojos falsos. Solo dos snapshots de cadena, y exclusivamente para el serializador.

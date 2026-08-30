@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { getGlyph, getHersheyFont, listHersheyFonts, parseGlyphPath } from '../src/core/text/hershey'
+import { getHersheyFont, listHersheyFonts, parseGlyphPath } from '../src/core/text/hershey'
+import { getGlyph } from '../src/core/text/glyphs'
 import { layoutHersheyText, type TextStyle } from '../src/core/text/layout'
 import type { Vec2 } from '../src/core/geometry/vec'
 
@@ -117,10 +118,9 @@ describe('maquetación', () => {
     expect(bbox(out.strokes).maxY).toBeGreaterThan(0)  // la segunda línea baja
   })
 
-  it('informa de los caracteres que la familia no tiene, en vez de tragárselos', () => {
-    // Hershey es ASCII imprimible: en un panel hacen falta 'Ω' y '°'.
-    const out = layoutHersheyText('50Ω 20°', style())
-    expect(out.missing).toEqual(['Ω', '°'])
+  it('informa de los caracteres que no sabe componer, en vez de tragárselos', () => {
+    const out = layoutHersheyText('50€ ok 漢', style())
+    expect(out.missing).toEqual(['€', '漢'])
     expect(out.strokes.length).toBeGreaterThan(0)  // el resto sí se compone
   })
 
@@ -182,5 +182,122 @@ describe('texto sobre arco', () => {
     // En convexo las mayúsculas suben desde la línea base; en cóncavo bajan.
     expect(convex.minY).toBeLessThan(0)
     expect(concave.maxY).toBeGreaterThan(0)
+  })
+})
+
+describe('símbolos y acentos fuera de ASCII', () => {
+  const font = getHersheyFont('hershey-sans')!
+  const strokesOf = (text: string) => layoutHersheyText(text, style()).strokes
+
+  it('compone el vocabulario real de un panel sin dejar nada fuera', () => {
+    const out = layoutHersheyText('50Ω 4.7µF Ø9 ±1° 20×30', style())
+    expect(out.missing).toEqual([])
+    expect(out.strokes.length).toBeGreaterThan(0)
+  })
+
+  it('saca las letras griegas de la familia de reserva', () => {
+    for (const ch of ['Ω', 'µ', 'π', 'Δ', 'α']) {
+      const g = getGlyph(font, ch)
+      expect(g, ch).not.toBeNull()
+      expect(g!.strokes.length, ch).toBeGreaterThan(0)
+      expect(g!.advance, ch).toBeGreaterThan(0)
+    }
+  })
+
+  it('no confunde xi con chi, que es el par que se presta a error', () => {
+    // La convención de Hershey va por la transcripción inglesa: chi es la C y
+    // xi es la X. Se distinguen por la forma, no por la posición.
+    const horizontales = (ch: string) => {
+      const pts = getGlyph(font, ch)!.strokes
+      return pts.filter((st) => st.length === 2
+        && Math.abs(st[0].y - st[1].y) < 0.6
+        && Math.abs(st[0].x - st[1].x) > 3).length
+    }
+    // Ξ son tres barras horizontales; Χ, dos diagonales cruzadas y ninguna barra.
+    expect(horizontales('Ξ')).toBe(3)
+    expect(horizontales('Χ')).toBe(0)
+    expect(getGlyph(font, 'Χ')!.strokes).toHaveLength(2)
+
+    // En minúscula, chi tiene descendente y xi tiene ascendente y descendente.
+    const box = (ch: string) => {
+      const ys = getGlyph(font, ch)!.strokes.flat().map((p) => p.y)
+      return { top: Math.min(...ys), bottom: Math.max(...ys) }
+    }
+    expect(box('χ').bottom).toBeGreaterThan(font.metrics.baseline)
+    expect(box('ξ').bottom).toBeGreaterThan(font.metrics.baseline)
+    expect(box('ξ').top).toBeLessThan(box('χ').top)
+  })
+
+  it('el micro y el ohmio son puntos de código propios, no la letra griega', () => {
+    // U+00B5 MICRO SIGN frente a U+03BC GREEK SMALL LETTER MU.
+    expect('\u00B5').not.toBe('\u03BC')
+    expect(getGlyph(font, '\u00B5')).not.toBeNull()
+    expect(getGlyph(font, '\u2126')).not.toBeNull()  // U+2126 OHM SIGN
+  })
+
+  it('el acento se añade al glifo base sin cambiar el avance', () => {
+    const n = getGlyph(font, 'n')!
+    const enye = getGlyph(font, 'ñ')!
+    expect(enye.advance).toBe(n.advance)
+    expect(enye.strokes.length).toBe(n.strokes.length + 1)
+
+    // Y va por encima de la letra.
+    const topN = Math.min(...n.strokes.flat().map((p) => p.y))
+    const topEnye = Math.min(...enye.strokes.flat().map((p) => p.y))
+    expect(topEnye).toBeLessThan(topN)
+  })
+
+  it('la cedilla va por debajo de la línea base, no encima', () => {
+    const c = getGlyph(font, 'c')!
+    const cedilla = getGlyph(font, 'ç')!
+    const bottomC = Math.max(...c.strokes.flat().map((p) => p.y))
+    const bottomCedilla = Math.max(...cedilla.strokes.flat().map((p) => p.y))
+    expect(bottomCedilla).toBeGreaterThan(bottomC)
+  })
+
+  it('el grado es un círculo pequeño y alto', () => {
+    const deg = getGlyph(font, '°')!
+    const ys = deg.strokes.flat().map((p) => p.y)
+    const alto = Math.max(...ys) - Math.min(...ys)
+    // Pequeño frente a la altura de mayúscula, y por encima de la línea base.
+    expect(alto).toBeLessThan(font.metrics.capHeight / 2)
+    expect(Math.max(...ys)).toBeLessThan(font.metrics.baseline)
+  })
+
+  it('el diámetro es la letra atravesada por una diagonal', () => {
+    const O = getGlyph(font, 'O')!
+    const slashed = getGlyph(font, 'Ø')!
+    expect(slashed.strokes.length).toBe(O.strokes.length + 1)
+    expect(slashed.advance).toBe(O.advance)
+  })
+
+  it('los signos de apertura son los de cierre girados y bajados', () => {
+    const close = getGlyph(font, '?')!
+    const open = getGlyph(font, '¿')!
+    expect(open.strokes.length).toBe(close.strokes.length)
+    expect(open.advance).toBe(close.advance)
+    // Baja por debajo de la línea base, como en español.
+    expect(Math.max(...open.strokes.flat().map((p) => p.y)))
+      .toBeGreaterThan(Math.max(...close.strokes.flat().map((p) => p.y)))
+  })
+
+  it('funciona en todas las familias, no solo en la sans', () => {
+    for (const { id } of listHersheyFonts()) {
+      const f = getHersheyFont(id)!
+      expect(getGlyph(f, 'Ω'), id).not.toBeNull()
+      expect(getGlyph(f, 'ñ'), id).not.toBeNull()
+      expect(getGlyph(f, '°'), id).not.toBeNull()
+    }
+  })
+
+  it('se maqueta a la misma altura que el resto del texto', () => {
+    // La reserva griega se escala a las métricas de la familia de destino.
+    const soloLatino = strokesOf('OO')
+    const conGriega = strokesOf('OΩ')
+    const alto = (ss: { y: number }[][]) => {
+      const ys = ss.flat().map((p) => p.y)
+      return Math.max(...ys) - Math.min(...ys)
+    }
+    expect(alto(conGriega)).toBeCloseTo(alto(soloLatino), 1)
   })
 })

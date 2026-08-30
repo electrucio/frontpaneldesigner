@@ -41,6 +41,14 @@ const FAMILIES: { key: string; id: string; label: string }[] = [
 interface SourceGlyph { d: string; o: number }
 interface SourceFont { name: string; chars: SourceGlyph[] }
 
+/**
+ * Familias que NO se ofrecen al usuario y solo sirven de reserva para
+ * caracteres que las latinas no tienen: la griega aporta Ω, µ, π, Δ…
+ */
+const FALLBACK_FAMILIES: { key: string; id: string }[] = [
+  { key: 'greek', id: 'greek' },
+]
+
 const source: Record<string, SourceFont> = JSON.parse(readFileSync(SOURCE, 'utf8'))
 
 /** Extrae los puntos de un `d` de Hershey (solo M y L, con repetición implícita). */
@@ -109,6 +117,20 @@ const fonts = Object.fromEntries(FAMILIES.map(({ key, id, label }) => {
   }]
 }))
 
+const fallbackFonts = Object.fromEntries(FALLBACK_FAMILIES.map(({ key, id }) => {
+  const font = source[key]
+  if (!font) throw new Error(`La familia de reserva ${key} no está en ${SOURCE}`)
+  return [id, {
+    id,
+    label: font.name,
+    sourceKey: key,
+    sourceName: font.name,
+    firstCharCode: FIRST_CHAR_CODE,
+    metrics: metrics(font),
+    glyphs: font.chars.map((g) => ({ d: g.d, o: g.o })),
+  }]
+}))
+
 const out = {
   note: 'Generado por scripts/build-hershey.ts. No editar a mano.',
   provenance: {
@@ -116,13 +138,14 @@ const out = {
     port: 'hersheytext (MIT) - https://github.com/techninja/hersheytextjs',
   },
   fonts,
+  fallbackFonts,
 }
 
 const target = 'src/assets/fonts/hershey.json'
 writeFileSync(target, JSON.stringify(out))
 
 const kb = (readFileSync(target).length / 1024).toFixed(0)
-console.log(`${target}: ${FAMILIES.length} familias, ${kb} kB`)
+console.log(`${target}: ${FAMILIES.length} familias + ${FALLBACK_FAMILIES.length} de reserva, ${kb} kB`)
 for (const [id, f] of Object.entries(fonts)) {
   const m = (f as { metrics: Record<string, number> }).metrics
   console.log(`  ${id.padEnd(20)} base=${m.baseline} cap=${m.capHeight} x=${m.xHeight} asc=${m.ascender} desc=${m.descender}`)
